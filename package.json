@@ -1,0 +1,19 @@
+{
+  "name": "camelbot",
+  "version": "1.0.0",
+  "description": "Java and Discord bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jkcoxson/CamelBot.git"
+  },
+  "author": "jkcoxson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jkcoxson/CamelBot/issues"
+  },
+  "homepage": "https://github.com/jkcoxson/CamelBot#readme"
+}
