@@ -15,5 +15,10 @@
   "bugs": {
     "url": "https://github.com/jkcoxson/CamelBot/issues"
   },
-  "homepage": "https://github.com/jkcoxson/CamelBot#readme"
+  "homepage": "https://github.com/jkcoxson/CamelBot#readme",
+  "dependencies": {
+    "discord.js": "^12.4.1",
+    "mineflayer": "^2.34.0",
+    "prismarine-viewer": "^1.6.0"
+  }
 }
