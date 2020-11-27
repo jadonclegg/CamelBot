@@ -1,4 +1,6 @@
-configs/private.json
+configs/
+Java/
+.DS_Store
 
 ### Node ###
 # Logs
