@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/jkcoxson/CamelBot#readme",
   "dependencies": {
-    "discord.js": "^12.4.1",
+    "discord.js": "^12.5.1",
     "mineflayer": "^2.34.0",
     "prismarine-viewer": "^1.6.0"
   }

@@ -19,6 +19,8 @@ const prefix = dconfig.prefix;
 const { waitForDebugger } = require("inspector");
 const child_process = require('child_process');
 var game = child_process.spawn('java', ['-Xmx4G','-Xms4G','-jar',mconfig.jarname],{cwd:mconfig.path});
+var logcache=[]
+var cachesize=0
 
 //Game variables
 var playersonline = [];
@@ -30,7 +32,7 @@ var namereplacements = [];
 fs.readFile('./data/replacements.json', function (err,data){
     namereplacements = JSON.parse(data);
 });
-console.log("JSON:" + namereplacements)
+dlog("JSON:" + namereplacements)
 var joinedplayers;
 fs.readFile('./data/joined.txt', (err,data)=>{
     joinedplayers = data.toString().split('\n');
@@ -59,7 +61,7 @@ client.on('message', async message =>{
                     var topush = message.author.username
                     topush += ":";
                     topush += args[0];
-                    console.log(topush)
+                    dlog(topush)
                     dict.push(topush);
                     var tosend="Boot up Minecraft and type \"~link "+message.author.username+"\""
                     message.reply(tosend)
@@ -76,6 +78,10 @@ client.on('message', async message =>{
                 }
                 message.reply(tosend)
 
+            }
+            if (command=="dump"){
+                dumpcache();
+                message.reply("Dumped Java log early")
             }
 
         }else{
@@ -103,7 +109,6 @@ client.on('message', async message =>{
             tosend+=": "
             tosend+=message.content
             tosend+='\n';
-            console.log("Send into game?")
             game.stdin.write(tosend)
         }
     }
@@ -119,12 +124,11 @@ client.on('message', async message =>{
 game.stdout.setEncoding("utf-8");
 game.stdin.setEncoding("utf-8");
 game.stdout.on('data', data => {
+    dlog(data.toString());
     data_str=data.toString();
     var datasplit=data_str.split(' ');
     datasplit.shift();
-    console.log(datasplit)
     if (datasplit[2]=="Done"){
-        console.log(datasplit[2])
         serverdone=true;
     }
     if (datasplit[2]=="delayed"){
@@ -140,24 +144,24 @@ game.stdout.on('data', data => {
         if (datasplit[3]=='left'){
             playersonline.splice(playersonline.findIndex(element=>element =datasplit[2],element=>element =datasplit[2]))
         }
-        process.stdout.write("Players online: ")
-        console.log(playersonline)
+        dlog("Players online: ")
+        dlog(playersonline)
         if (datasplit[2].startsWith('<')){
             
             var chatmessage = "**"
             var sender = datasplit[2].slice(1,datasplit[2].length-1)
             if (datasplit[2].startsWith('~link')){
-                console.log("Testing for link")
+                dlog("Testing for link")
                 var topush = datasplit[3].slice(0,datasplit[3].length-1);
                 topush+=":";
                 topush+=sender
-                console.log(topush);
+                dlog(topush);
                 if(dict.includes(topush)){
-                    console.log("linked")
+                    dlog("linked")
                     namereplacements.push(datasplit[3].slice(0,datasplit[3].length-1)+": "+sender)
                     fs.writeFile("./data/replacements.json", JSON.stringify(namereplacements),function(err){
                         if(err) {
-                            return console.log(err);
+                            return dlog(err);
                         }
                     });
                 }
@@ -179,13 +183,41 @@ game.stdout.on('data', data => {
 });
 
 game.on('error',err=>{
-    console.log("Error");
-    console.log(err)
+    dlog("Error");
+    dlog(err)
 });
 
 
 
+function dlog(message){
+    console.log(message)
+    var stringified
+    try{
+        stringified = message.toString()
+    }catch{
+        
+    }
 
+    if (stringified.length>2){
+        logcache.push(stringified);
+    }
+    cachesize+=stringified.length
+    if (cachesize>1500){
+        dumpcache();
+    }
+    
+    
+}
+function dumpcache(){
+    tosend=""
+    for (var i =0;i<logcache.length;i++){
+        tosend+=logcache[i];
+        tosend+="\n";
+    }
+    client.channels.cache.get(dconfig.logchat).send(tosend)
+    logcache=[]
+    cachesize=0;
+}
 
 
 
