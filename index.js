@@ -123,7 +123,8 @@ game.stdout.on('data', data => {
     var datasplit=data_str.split(' ');
     datasplit.shift();
     console.log(datasplit)
-    if (datasplit[1]=="Done"){
+    if (datasplit[2]=="Done"){
+        console.log(datasplit[2])
         serverdone=true;
     }
     if (datasplit[2]=="delayed"){
@@ -133,18 +134,18 @@ game.stdout.on('data', data => {
     }
     if (serverdone){
         //Start parsing input here
-        if (datasplit[2]=='joined'){
-            playersonline.push(datasplit[1]);
+        if (datasplit[3]=='joined'){
+            playersonline.push(datasplit[2]);
         }
-        if (datasplit[2]=='left'){
-            playersonline.splice(playersonline.findIndex(element=>element =datasplit[1],element=>element =datasplit[1]))
+        if (datasplit[3]=='left'){
+            playersonline.splice(playersonline.findIndex(element=>element =datasplit[2],element=>element =datasplit[2]))
         }
         process.stdout.write("Players online: ")
         console.log(playersonline)
-        if (datasplit[1].startsWith('<')){
+        if (datasplit[2].startsWith('<')){
             
             var chatmessage = "**"
-            var sender = datasplit[1].slice(1,datasplit[1].length-1)
+            var sender = datasplit[2].slice(1,datasplit[2].length-1)
             if (datasplit[2].startsWith('~link')){
                 console.log("Testing for link")
                 var topush = datasplit[3].slice(0,datasplit[3].length-1);
@@ -163,7 +164,7 @@ game.stdout.on('data', data => {
             }else{
                 chatmessage+=sender;
                 chatmessage+=":** "
-                for(var i = 2; i<datasplit.length; i++){
+                for(var i = 3; i<datasplit.length; i++){
                     chatmessage+=datasplit[i];
                     chatmessage+=" ";
                 }
