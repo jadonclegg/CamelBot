@@ -21,6 +21,7 @@ const child_process = require('child_process');
 var game = child_process.spawn('java', ['-Xmx4G','-Xms4G','-jar',mconfig.jarname],{cwd:mconfig.path});
 var logcache=[]
 var cachesize=0
+var cachetime=5
 
 //Game variables
 var playersonline = [];
@@ -110,6 +111,13 @@ client.on('message', async message =>{
             tosend+=message.content
             tosend+='\n';
             game.stdin.write(tosend)
+        }
+    }
+    if (message.channel.id==dconfig.logchat){
+        if (serverdone){
+            game.stdin.write(message.content)
+            game.stdin.write('\n')
+            dumpcache()
         }
     }
 });
@@ -208,7 +216,16 @@ function dlog(message){
     
     
 }
+
+setInterval(()=>{
+    cachetime=cachetime-1
+    if (cachetime==0){
+        dumpcache()
+    }
+},1000*60)
+
 function dumpcache(){
+    
     tosend=""
     for (var i =0;i<logcache.length;i++){
         tosend+=logcache[i];
@@ -217,6 +234,7 @@ function dumpcache(){
     client.channels.cache.get(dconfig.logchat).send(tosend)
     logcache=[]
     cachesize=0;
+    cachetime=5
 }
 
 
