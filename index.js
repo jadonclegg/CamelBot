@@ -52,7 +52,7 @@ client.on('message', async message =>{
                 // IDK if this will make it to production, it should just work in theory
             }
             if (command=="restart"){
-                if (!message.member.roles.cache.some((role) => role.name === 'admin')){
+                if (!message.member.roles.cache.some((role) => role.name === dconfig.admin)){
                     message.reply("you must be an admin to restart a server.")
                     return;
                 }
