@@ -51,6 +51,25 @@ client.on('message', async message =>{
             if (command=="dump"){
                 // IDK if this will make it to production, it should just work in theory
             }
+            if (command=="restart"){
+                if (!message.member.roles.cache.some((role) => role.name === 'admin')){
+                    message.reply("you must be an admin to restart a server.")
+                    return;
+                }
+                if (args.length<1){
+                    message.reply("you must supply the name of the server to restart");
+                    return;
+                }
+                for (var i =0; i<server_connections.length;i++){
+                    if (server_connections[i].connected&&server_connections[i].server_name==args[0]){
+                        var packet = {
+                            "type":"restart"
+                        }
+                        server_connections[i].send(JSON.stringify(packet))
+                        message.reply("sent restart packet to "+server_connections[i].server_name)
+                    }
+                }
+            }
 
         }else{
             //message.delete();           
