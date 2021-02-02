@@ -44,8 +44,7 @@ function tellRaw(playerName, message) {
     let command = "tellraw @a ";
     let data = [
         {
-            text: playerName + ": ",
-            color: "red",
+            text: "<" + playerName + "> ",
         },
         {
             text: message
@@ -115,7 +114,7 @@ client.on('message', async message =>{
         }
         var chatpack = {
             "type":"command",
-            "command": tellRaw(message.author.username, messsage.content)
+            "command": tellRaw(message.author.username, message.content)
         }
         for (var i =0; i<qdservers.length;i++){
             qdservers[i].send(JSON.stringify(chatpack))
