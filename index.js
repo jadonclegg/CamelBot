@@ -31,6 +31,29 @@ for (var i =0; i<serverlist.length;i++){
     
 }
 
+/**
+ * Builds a tellraw command using the official JSON format of minecraft.
+ * 
+ * See https://minecraft.gamepedia.com/Commands/tellraw for more information.
+ * 
+ * @param {string} playerName - Name of player (plaintext)
+ * @param {string} message - Message, can contain any characters.
+ * @returns {string} - Text for tellraw command.
+ */
+function tellRaw(playerName, message) {
+    let command = "tellraw @a ";
+    let data = [
+        {
+            text: playerName + ": ",
+            color: "red",
+        },
+        {
+            text: message
+        }
+    ];
+
+    return command + JSON.stringify(data);
+}
 
 
 //Listen for people running their mouths
@@ -84,24 +107,15 @@ client.on('message', async message =>{
     }
     //Send messages into all the games
     if (message.channel.id==dconfig.minecraftchat){
-        if (message.content.toString().includes('\n')){
-            message.reply("grrrrrrrrrr")
-            return;
-        }
         var qdservers=[]
         for (var i =0; i<server_connections.length;i++){
             if (server_connections[i].connected==true){
                 qdservers.push(server_connections[i])
             }
         }
-        var toSend = "<"
-        toSend+=message.author.username
-        toSend+="> "
-        toSend+=message.content
-        var toCommand = "tellraw @a \"" + toSend +"\""
         var chatpack = {
             "type":"command",
-            "command": toCommand
+            "command": tellRaw(message.author.username, messsage.content)
         }
         for (var i =0; i<qdservers.length;i++){
             qdservers[i].send(JSON.stringify(chatpack))
@@ -116,14 +130,9 @@ for (var i = 0; i<server_connections.length; i++){
     server_connections[i].on('chat', (sender, message,source) => {
         for(var p = 0; p<server_connections.length;p++){
             if (server_connections[p].server_name!=source&&server_connections[p].connected){
-                var toSend = "<"
-                toSend+=sender
-                toSend+="> "
-                toSend+=message
-                var toCommand = "tellraw @a \"" + toSend +"\""
                 var chatpack = {
                     "type":"command",
-                    "command": toCommand
+                    "command": tellRaw(sender, message)
                 }
                 server_connections[p].send(JSON.stringify(chatpack))
             }
