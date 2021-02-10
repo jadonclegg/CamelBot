@@ -24,11 +24,12 @@ var droneship = require('./droneships.js')
 
 var server_connections = []
 var server_names = []
+var logchats = []
 
 // Initiate all server connections
 for (var i =0; i<serverlist.length;i++){
-    server_connections.push(new droneship(serverlist[i].port,serverlist[i].address,serverlist[i].name))
-    
+    server_connections.push(new droneship(serverlist[i].port,serverlist[i].address,serverlist[i].name,serverlist[i].log_channel))
+    logchats.push(serverlist[i].log_channel)
 }
 
 /**
@@ -120,8 +121,14 @@ client.on('message', async message =>{
             qdservers[i].send(JSON.stringify(chatpack))
         }
     }
-    if (message.channel.id==dconfig.logchat){
-        // TODO
+    for (var i =0; i<server_connections.length; i++){
+        if (message.channel.toString().split('#')[1].split('>')[0]==logchats[i].toString()){
+            var toSend = {
+                "type":"command",
+                "command":message.content
+            }
+            server_connections[i].send(JSON.stringify(toSend))
+        }
     }
 });
 
@@ -139,6 +146,12 @@ for (var i = 0; i<server_connections.length; i++){
         }
         
         client.channels.cache.get(dconfig.minecraftchat).send("**"+sender+":** "+message);
+    });
+    server_connections[i].on('log', (log,channel)=>{
+        if (log.length>0){
+            client.channels.cache.get(channel).send(log); 
+        }
+        
     })
 }
 
@@ -187,6 +200,20 @@ async function getPlayers() {
 
 
 
+
+
+
+
+client.on("ready", () =>{
+    client.user.setPresence({
+        status: "online",  //You can show online, idle....
+        game: {
+            name: dconfig.game,  //The message shown
+            type: "PLAYING" //PLAYING: WATCHING: LISTENING: STREAMING:
+        }
+    });
+    client.user.setActivity(dconfig.game); 
+ });
 
 client.login(dprivate.token);
 

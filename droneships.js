@@ -10,10 +10,12 @@ module.exports = class droneship extends EventEmitter {
     connected;
     server_name
     s_client
+    logchat
 
-    constructor(port,address,name){
+    constructor(port,address,name,logchat){
         super();
         this.server_name=name
+        this.logchat=logchat
         this.tcp_server=net.createServer();
         this.droneshipPort=this.tcp_server.listen(port,address,()=>{
             console.log("Opening docking for "+ name+ " on port "+address+":"+port)
@@ -38,8 +40,13 @@ module.exports = class droneship extends EventEmitter {
                         //Garbage packet, discard it
                     }
                 }
+                try {
+                    var temp = packet.packet
+                }catch{
+                    return;
+                }
                 if (packet.packet=="log"){
-                    this.emit('log', packet.log)
+                    this.emit('log', packet.log,this.logchat)
                 }
                 if (packet.packet=="chat"){
                     this.emit('chat',packet.sender,packet.message,this.server_name)
@@ -56,7 +63,8 @@ module.exports = class droneship extends EventEmitter {
                 console.log("Lost connection to "+name)
                 this.connected=false
                 client.removeAllListeners();
-            })
+            });
+            
         });
         
         
