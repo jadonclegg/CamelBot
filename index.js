@@ -25,10 +25,12 @@ var droneship = require('./droneships.js')
 var server_connections = []
 var server_names = []
 var logchats = []
+var dconnected = false
+var unconnectedlogs = []
 
 // Initiate all server connections
 for (var i =0; i<serverlist.length;i++){
-    server_connections.push(new droneship(serverlist[i].port,serverlist[i].address,serverlist[i].name,serverlist[i].log_channel))
+    server_connections.push(new droneship(serverlist[i].port,serverlist[i].address,serverlist[i].name,serverlist[i].log_channel,dconfig.logchat))
     logchats.push(serverlist[i].log_channel)
 }
 
@@ -127,7 +129,12 @@ client.on('message', async message =>{
                 "type":"command",
                 "command":message.content
             }
-            server_connections[i].send(JSON.stringify(toSend))
+            if (server_connections[i].connected){
+                server_connections[i].send(JSON.stringify(toSend))
+            }else{
+                message.reply("server not connected")
+            }
+            
         }
     }
 });
@@ -160,6 +167,14 @@ for (var i = 0; i<server_connections.length; i++){
         }
         
     })
+    server_connections[i].on('console.log',(data)=>{
+        if (dconnected){
+            client.channels.cache.get(dconfig.logchat).send(data); 
+        }else{
+            unconnectedlogs.push(data)
+        }
+        console.log(data)
+    });
 }
 
 async function getPlayers() {
@@ -211,7 +226,14 @@ async function getPlayers() {
 
 
 
+
+
+
 client.on("ready", () =>{
+    dconnected=true
+    for (var i =0; i<unconnectedlogs.length; i++){
+        client.channels.cache.get(dconfig.logchat).send(unconnectedlogs[i]); 
+    }
     client.user.setPresence({
         status: "online",  //You can show online, idle....
         game: {

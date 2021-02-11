@@ -11,17 +11,19 @@ module.exports = class droneship extends EventEmitter {
     server_name
     s_client
     logchat
+    mainlog
 
-    constructor(port,address,name,logchat){
+    constructor(port,address,name,logchat,mainlog){
         super();
         this.server_name=name
         this.logchat=logchat
+        this.mainlog=mainlog
         this.tcp_server=net.createServer();
         this.droneshipPort=this.tcp_server.listen(port,address,()=>{
-            console.log("Opening docking for "+ name+ " on port "+address+":"+port)
+            this.emit('console.log', "Opening docking for "+ name+ " on port "+address+":"+port)
         })
         this.droneshipPort.on("connection",(client)=>{
-            console.log(name+" connected")
+            this.emit('console.log',name+" connected")
             this.s_client=client
             this.connected=true
             client.on('data',(data)=>{
@@ -30,13 +32,13 @@ module.exports = class droneship extends EventEmitter {
                     packet =JSON.parse(data)
                 } catch{
                     //Sometimes packets get mashed together
-                    console.log("Mashed potato")
-                    console.log(data.toString().split('}')[1]+="}")
+                    //this.emit('console.log',"Mashed potato")
+                    //this.emit('console.log',data.toString().split('}')[1]+="}")
                     try{
                         
                         packet = JSON.parse(data.toString().split('}')[1]+="}")
                     }catch{
-                        console.log("Catch: "+data)
+                        this.emit('console.log',"Catch: "+data)
                         //Garbage packet, discard it
                     }
                 }
@@ -55,12 +57,12 @@ module.exports = class droneship extends EventEmitter {
                     this.emit('playerlist',packet.list)
                 }
                 if (packet.packet=="reqCoords"){
-                    console.log("drone_coords")
+                    this.emit('console.log',"drone_coords")
                     this.emit('reqCoords',packet.list)
                 }
             });
             client.on("close",()=>{
-                console.log("Lost connection to "+name)
+                this.emit('console.log',"Lost connection to "+name)
                 this.connected=false
                 client.removeAllListeners();
             });
@@ -85,6 +87,8 @@ module.exports = class droneship extends EventEmitter {
             thils.s_client.write(JSON.stringify(toSend));
         }
     }
+
+    
 
     
     
