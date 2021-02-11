@@ -149,7 +149,14 @@ for (var i = 0; i<server_connections.length; i++){
     });
     server_connections[i].on('log', (log,channel)=>{
         if (log.length>0){
-            client.channels.cache.get(channel).send(log); 
+            if (log.length>1999){
+                var pieces = Math.ceil(log/1999)
+                for (var p = 0; p<pieces-1;p++){
+                    client.channels.cache.get(channel).send(log.splice(i*1999,i+1*1999)); 
+                }
+            }else{
+                client.channels.cache.get(channel).send(log); 
+            }
         }
         
     })
