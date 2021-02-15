@@ -20,6 +20,7 @@ const client = new Discord.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION']
 const prefix = dconfig.prefix;
 const { waitForDebugger } = require("inspector");
 var droneship = require('./droneships.js')
+var bot = require('./bots.js')
 
 
 var server_connections = []
@@ -70,31 +71,7 @@ client.on('message', async message =>{
             const commandBody = message.content.slice(prefix.length); // Remove the prefix
             const args = commandBody.split(' '); // Split the message into array
             const command = args.shift().toLowerCase(); // Remove first from command and lower all 
-            if (command=="players"){
-                message.reply(await(getPlayers()));
-            }
-            if (command=="dump"){
-                // IDK if this will make it to production, it should just work in theory
-            }
-            if (command=="restart"){
-                if (!message.member.roles.cache.some((role) => role.name === dconfig.admin)){
-                    message.reply("you must be an admin to restart a server.")
-                    return;
-                }
-                if (args.length<1){
-                    message.reply("you must supply the name of the server to restart");
-                    return;
-                }
-                for (var i =0; i<server_connections.length;i++){
-                    if (server_connections[i].connected&&server_connections[i].server_name==args[0]){
-                        var packet = {
-                            "type":"restart"
-                        }
-                        server_connections[i].send(JSON.stringify(packet))
-                        message.reply("sent restart packet to "+server_connections[i].server_name)
-                    }
-                }
-            }
+            message.reply(await(command_runner(command,args,'discord',message)))
 
         }else{
             //message.delete();           
@@ -141,6 +118,25 @@ client.on('message', async message =>{
 
 for (var i = 0; i<server_connections.length; i++){
     server_connections[i].on('chat', (sender, message,source) => {
+        if (message.startsWith(dconfig.prefix)){
+            const commandBody = message.slice(prefix.length); // Remove the prefix
+            const args = commandBody.split(' '); // Split the message into array
+            const command = args.shift().toLowerCase(); // Remove first from command and lower all
+            var toSend = {
+                'type':'command',
+                'command': "tellraw "+ sender+" {\"text\":\""+command_runner(command,args,'minecraft')+"\"}"
+            }
+            console.log("Got here")
+            console.log(toSend)
+            for(var p = 0; p<server_connections.length;p++){
+                if (server_connections[p].server_name==source&&server_connections[p].connected){
+                    server_connections[p].send(JSON.stringify(toSend))
+                    console.log("got here 2")
+                }
+                
+            }
+            return;
+        }
         for(var p = 0; p<server_connections.length;p++){
             if (server_connections[p].server_name!=source&&server_connections[p].connected){
                 var chatpack = {
@@ -218,7 +214,38 @@ async function getPlayers() {
     })
 }
 
-
+async function command_runner(command,args,source,message=null){
+    if (command=="players"){
+        if (source=='discord'){
+            return(await(getPlayers()));
+        }else{
+            return("You must run this command from Discord")
+        }
+        
+    }
+    if (command=="restart"){
+        if (source=='minecraft'){
+            return("You must run this command from Discord")
+        }
+        if (!message.member.roles.cache.some((role) => role.name === dconfig.admin)){
+            return("you must be an admin to restart a server.")
+            
+        }
+        if (args.length<1){
+            return("you must supply the name of the server to restart");
+            
+        }
+        for (var i =0; i<server_connections.length;i++){
+            if (server_connections[i].connected&&server_connections[i].server_name==args[0]){
+                var packet = {
+                    "type":"restart"
+                }
+                server_connections[i].send(JSON.stringify(packet))
+                return("sent restart packet to "+server_connections[i].server_name)
+            }
+        }
+    }
+}
 
 
 
