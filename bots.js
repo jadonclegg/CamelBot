@@ -11,7 +11,7 @@ module.exports = class bot extends EventEmitter {
 
     constructor(IP,port,name,position,lookat,action){
         this.bot = mineflayer.createBot({ host: IP, port: port,username:name })
-
+        
         
     }
     

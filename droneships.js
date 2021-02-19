@@ -60,6 +60,7 @@ module.exports = class droneship extends EventEmitter {
                     this.emit('console.log',"drone_coords")
                     this.emit('reqCoords',packet.list)
                 }
+                
             });
             client.on("close",()=>{
                 this.emit('console.log',"Lost connection to "+name)
@@ -68,7 +69,15 @@ module.exports = class droneship extends EventEmitter {
             });
             
         });
-        
+        setInterval(()=>{
+            if (this.connected){
+                //this.emit('console.log',"Heartbeat packet sent pls work")
+                var toSend={
+                    "packet":"heartbeat"
+                }
+                this.s_client.write(JSON.stringify(toSend))
+            }
+        },5000)
         
 
 
@@ -84,9 +93,10 @@ module.exports = class droneship extends EventEmitter {
             var toSend={
                 "packet":"restart"
             }
-            thils.s_client.write(JSON.stringify(toSend));
+            this.s_client.write(JSON.stringify(toSend));
         }
     }
+    
 
     
 

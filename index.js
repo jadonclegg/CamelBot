@@ -12,6 +12,7 @@ const { spawn } = require("child_process");
 const dprivate = require('./configs/private.json');
 const dconfig = require('./configs/discord.json');
 const serverlist = require('./configs/servers.json');
+var pinglist = require("./data/pings.json")
 //const mconfig = require("./configs/minecraft.json");
 
 
@@ -61,6 +62,7 @@ function tellRaw(playerName, message) {
 
 //Listen for people running their mouths
 client.on('message', async message =>{
+    pingAdder(message.author.username,message.author.id)
     //Don't respond to other bots
     if(message.author.bot) return;
 
@@ -70,8 +72,14 @@ client.on('message', async message =>{
         if (message.channel.id==dconfig.commandchannel){
             const commandBody = message.content.slice(prefix.length); // Remove the prefix
             const args = commandBody.split(' '); // Split the message into array
-            const command = args.shift().toLowerCase(); // Remove first from command and lower all 
-            message.reply(await(command_runner(command,args,'discord',message)))
+            const command = args.shift().toLowerCase(); // Remove first from command and lower all
+            try {
+                message.reply(await(command_runner(command,args,'discord',message)))
+            }catch(err){
+                message.reply("an error has occured.")
+                console.log(err)
+            }
+            
 
         }else{
             //message.delete();           
@@ -147,8 +155,8 @@ for (var i = 0; i<server_connections.length; i++){
             }
             
         }
-        
-        client.channels.cache.get(dconfig.minecraftchat).send("**"+sender+":** "+message);
+        // TODO find all the things that start with @ and replace them
+        client.channels.cache.get(dconfig.minecraftchat).send("**"+sender+":** "+pingReplacer(message,sender));
     });
     server_connections[i].on('log', (log,channel)=>{
         if (log.length>0){
@@ -244,13 +252,81 @@ async function command_runner(command,args,source,message=null){
                 return("sent restart packet to "+server_connections[i].server_name)
             }
         }
+        return("no connected server found named "+args[0])
+    }
+    if (command=="pingalias"){
+        if(source=='discord'){
+            if (args.length<1){
+                return("supply the name by which you want to be called.")
+            }
+            for (var i = 0; i<pinglist.length; i++){
+                if (pinglist[i].username==args[0]){
+                    return("that nickname is already in the database.")
+                }
+                
+            }
+            var toSend = {
+                "username":args[0].toString(),
+                "id":message.author.id.toString()
+            }
+            pinglist.push(toSend)
+            try {
+                fs.writeFileSync("data/pings.json", JSON.stringify(pinglist))
+            } catch (err) {
+                console.error(err)
+            }
+            return(args[0]+" has been added to your database.")
+        }else{
+            return("You must run this command in Discord")
+        }
     }
 }
 
 
+function pingReplacer(chat,sender){
+    var brokenChat=chat.split(" ");
+    var toSend = ""
+    for (var i =0; i<brokenChat.length;i++){
+        if (brokenChat[i].startsWith("@")){
+            var found = false
+            for (var p=0;p<pinglist.length;p++){
+                
+                if (pinglist[p].username.toString()==brokenChat[i].substr(1,brokenChat[i].length)){
+                    toSend+="<@!"+pinglist[p].id+">";
+                    found = true
+                }
+            }
+            if (!found){
+                toSend+=brokenChat[i]
+            }
+        } else{
+            toSend+=brokenChat[i]
+        }
+        toSend+=' '
+    }
+    return(toSend)
+}
 
-
-
+function pingAdder(username,id){
+    for (var i = 0; i<pinglist.length; i++){
+        if (pinglist[i].username==username){
+            return
+        }
+        
+    }
+    var toSend = {
+        "username":username.toString(),
+        "id":id.toString()
+    }
+    pinglist.push(toSend)
+    try {
+        fs.writeFileSync("data/pings.json", JSON.stringify(pinglist))
+    } catch (err) {
+        console.error(err)
+    }
+    
+    
+}
 
 
 
