@@ -21,7 +21,9 @@ const client = new Discord.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION']
 const prefix = dconfig.prefix;
 const { waitForDebugger } = require("inspector");
 var droneship = require('./droneships.js')
-var bot = require('./bots.js')
+var bot = require('./bots.js');
+const { version } = require("canvas");
+const { resolve } = require("path");
 
 
 var server_connections = []
@@ -63,6 +65,10 @@ function tellRaw(playerName, message) {
 //Listen for people running their mouths
 client.on('message', async message =>{
     pingAdder(message.author.username,message.author.id)
+    if (message.content.startsWith("This has been an automated ghost ping for ")){
+        message.delete();
+        return;
+    }
     //Don't respond to other bots
     if(message.author.bot) return;
 
@@ -73,12 +79,16 @@ client.on('message', async message =>{
             const commandBody = message.content.slice(prefix.length); // Remove the prefix
             const args = commandBody.split(' '); // Split the message into array
             const command = args.shift().toLowerCase(); // Remove first from command and lower all
-            try {
-                message.reply(await(command_runner(command,args,'discord',message)))
-            }catch(err){
-                message.reply("an error has occured.")
-                console.log(err)
+            var respond = await(command_runner(command,args,'discord',message))
+            if (respond!=undefined){
+                try {
+                    message.reply(respond)
+                }catch(err){
+                    //message.reply("an error has occured.")
+                    console.log(err)
+                }
             }
+            
             
 
         }else{
@@ -132,14 +142,11 @@ for (var i = 0; i<server_connections.length; i++){
             const command = args.shift().toLowerCase(); // Remove first from command and lower all
             var toSend = {
                 'type':'command',
-                'command': "tellraw "+ sender+" {\"text\":\""+command_runner(command,args,'minecraft')+"\"}"
+                'command': "tellraw "+ sender+" {\"text\":\""+command_runner(command,args,'minecraft',null,sender)+"\"}"
             }
-            console.log("Got here")
-            console.log(toSend)
             for(var p = 0; p<server_connections.length;p++){
                 if (server_connections[p].server_name==source&&server_connections[p].connected){
                     server_connections[p].send(JSON.stringify(toSend))
-                    console.log("got here 2")
                 }
                 
             }
@@ -156,24 +163,28 @@ for (var i = 0; i<server_connections.length; i++){
             
         }
         // TODO find all the things that start with @ and replace them
-        client.channels.cache.get(dconfig.minecraftchat).send("**"+sender+":** "+pingReplacer(message,sender));
+        //client.channels.cache.get(dconfig.minecraftchat).send("**"+sender+":** "+pingReplacer(message,sender));
+        discordSend("**"+sender+":** "+pingReplacer(message,sender),dconfig.minecraftchat)
     });
     server_connections[i].on('log', (log,channel)=>{
         if (log.length>0){
             if (log.length>1999){
                 var pieces = Math.ceil(log/1999)
                 for (var p = 0; p<pieces-1;p++){
-                    client.channels.cache.get(channel).send(log.splice(i*1999,i+1*1999)); 
+                    //client.channels.cache.get(channel).send(log.splice(i*1999,i+1*1999)); 
+                    discordSend(log.splice(i*1999,i+1*1999),channel)
                 }
             }else{
-                client.channels.cache.get(channel).send(log); 
+                //client.channels.cache.get(channel).send(log); 
+                discordSend(log,channel)
             }
         }
         
     })
     server_connections[i].on('console.log',(data)=>{
         if (dconnected){
-            client.channels.cache.get(dconfig.logchat).send(data); 
+            //client.channels.cache.get(dconfig.logchat).send(data); 
+            discordSend(data,dconfig.logchat)
         }else{
             unconnectedlogs.push(data)
         }
@@ -222,7 +233,47 @@ async function getPlayers() {
     })
 }
 
-async function command_runner(command,args,source,message=null){
+async function getCoords(player=undefined){
+    return new Promise((resolve,reject)=>{
+        var toReq = {
+            "type":"reqCoords"
+        }
+        var playerlist = []
+        var listcount = 0;
+        var qdservers=[]
+        for (var i =0; i<server_connections.length;i++){
+            if (server_connections[i].connected==true){
+                qdservers.push(server_connections[i])
+            }
+        }
+        var qdlength = qdservers.length
+        for (var i = 0;i<qdservers.length; i++){
+            if (qdservers[i].connected){
+                qdservers[i].send(JSON.stringify(toReq))
+            }
+            qdservers[i].on('reqCoords',(list)=>{
+                list.forEach(it=>{
+                    playerlist.push(it)
+                });
+                qdlength--;
+                if (qdlength<1){
+                    if (player==undefined){
+                        resolve(playerlist)
+                    }else{
+                        for (var p = 0; p<playerlist.length;p++){
+                            if (playerlist[p].player==player){
+                                resolve(playerlist[p])
+                            }
+                        }
+                        resolve("player not found")
+                    }
+                }
+            })
+        }
+    });
+}
+
+async function command_runner(command,args,source,message=null,player=null){
     if (command=="players"){
         if (source=='discord'){
             return(await(getPlayers()));
@@ -280,6 +331,60 @@ async function command_runner(command,args,source,message=null){
             return("You must run this command in Discord")
         }
     }
+    // Broken, maybe fix later
+    // if (command=="ghostping"){
+        
+    //     if (args.length<1){
+    //         return("You must supply the name of the victim")
+    //     }
+    //     var victim
+    //     if (source=="minecraft"){
+    //         victim=pingReplacer(args[0])
+    //     }else{
+    //         victim=args[0]
+    //         message.delete()
+    //     }
+        
+    //     if (victim=="<@!533530255172829184> "){
+    //         return("./ban")
+    //     }
+    //     client.channels.cache.forEach((it)=>{
+    //         if (it.isText()){
+    //             try{
+    //                 var justSent = discordSend("This has been an automated ghost ping for "+victim+". Have a nice day!",it.id)
+    //             }catch{
+    //                 // Incorrect permissions
+    //             }
+                
+    //         }
+            
+    //     })
+             
+        
+        
+    // }
+    if (command=="here"){
+        if (source!="minecraft"){
+            return("you must run this command from Minecraft")
+        }
+        var qdservers=[]
+        for (var i =0; i<server_connections.length;i++){
+            if (server_connections[i].connected==true){
+                qdservers.push(server_connections[i])
+            }
+        }
+        var coord=await(getCoords(player))
+        var toSend = Math.round(coord.x).toString()+" "+Math.round(coord.y).toString()+" "+Math.round(coord.z).toString()
+        for (var i = 0; i<qdservers.length; i++){
+            var chatpack = {
+                "type":"command",
+                "command": tellRaw(player, toSend)
+            }
+            qdservers[i].send(JSON.stringify(chatpack))
+        }
+        discordSend("**"+player+"**: "+coord,dconfig.minecraftchat)
+        
+    }
 }
 
 
@@ -328,6 +433,15 @@ function pingAdder(username,id){
     
 }
 
+function discordSend(message,channel){
+    try {
+        return(client.channels.cache.get(channel).send(message));
+    }catch(error){
+        console.log("Catch: "+message+" in channel: " +channel+"\n"+error)
+    }
+     
+}
+
 
 
 
@@ -336,7 +450,12 @@ client.on("ready", () =>{
     dconnected=true
     for (var i =0; i<unconnectedlogs.length; i++){
         client.channels.cache.get(dconfig.logchat).send(unconnectedlogs[i]); 
+        discordSend(unconnectedlogs[i],discordSend.logchat)
+        
     }
+    
+        
+    
     client.user.setPresence({
         status: "online",  //You can show online, idle....
         game: {
