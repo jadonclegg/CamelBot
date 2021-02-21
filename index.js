@@ -32,6 +32,7 @@ var logchats = []
 var dconnected = false
 var unconnectedlogs = []
 
+
 // Initiate all server connections
 for (var i =0; i<serverlist.length;i++){
     server_connections.push(new droneship(serverlist[i].port,serverlist[i].address,serverlist[i].name,serverlist[i].log_channel,dconfig.logchat))
@@ -153,7 +154,7 @@ for (var i = 0; i<server_connections.length; i++){
             return;
         }
         for(var p = 0; p<server_connections.length;p++){
-            if (server_connections[p].server_name!=source&&server_connections[p].connected){
+            if (server_connections[p].connected){
                 var chatpack = {
                     "type":"command",
                     "command": tellRaw(sender, message)
@@ -162,8 +163,6 @@ for (var i = 0; i<server_connections.length; i++){
             }
             
         }
-        // TODO find all the things that start with @ and replace them
-        //client.channels.cache.get(dconfig.minecraftchat).send("**"+sender+":** "+pingReplacer(message,sender));
         discordSend("**"+sender+":** "+pingReplacer(message,sender),dconfig.minecraftchat)
     });
     server_connections[i].on('log', (log,channel)=>{
@@ -434,6 +433,9 @@ function pingAdder(username,id){
 }
 
 function discordSend(message,channel){
+    if (message.length<1||message.length>1999){
+        return;
+    }
     try {
         return(client.channels.cache.get(channel).send(message));
     }catch(error){
