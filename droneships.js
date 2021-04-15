@@ -96,13 +96,5 @@ module.exports = class droneship extends EventEmitter {
             this.s_client.write(JSON.stringify(toSend));
         }
     }
-    
-
-    
-
-    
-    
-
-
 
 }

@@ -18,9 +18,11 @@
   "homepage": "https://github.com/jkcoxson/CamelBot#readme",
   "dependencies": {
     "canvas": "^2.6.1",
-    "discord.js": "^12.5.1",
+    "colors": "^1.4.0",
+    "discord.js": "^12.5.3",
+    "eventemitter2": "github:EventEmitter2/EventEmitter2",
     "mineflayer": "^2.39.2",
-    "prismarine-viewer": "^1.13.0",
+    "prismarine-viewer": "^1.18.1",
     "xi": "0.0.1"
   }
 }

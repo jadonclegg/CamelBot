@@ -3,6 +3,7 @@ configs_dev/
 Java/
 .DS_Store
 data/pings.json
+v3/
 
 ### Node ###
 # Logs

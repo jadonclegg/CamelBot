@@ -16,3 +16,4 @@ This is under development
 - [ ] Impliment baked in Camel whitelist for role joining
 - [ ] Impliment CamelVelocity features
 - [ ] Impliment CamelCamera features
+

@@ -439,7 +439,7 @@ function discordSend(message,channel){
     try {
         return(client.channels.cache.get(channel).send(message));
     }catch(error){
-        console.log("Catch: "+message+" in channel: " +channel+"\n"+error)
+        //console.log("Catch: "+message+" in channel: " +channel+"\n"+error)
     }
      
 }
