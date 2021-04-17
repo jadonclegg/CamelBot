@@ -17,3 +17,33 @@ This is under development
 - [ ] Impliment CamelVelocity features
 - [ ] Impliment CamelCamera features
 
+# socket.io Protocol
+
+## CamelBot to Minecraft
+
+#### ```("chat", (chat))```
+A message to be displayed on the screen of players. 
+Does not include the author because it can be anything.
+#### ```("command", (command))```
+###### ```return(output)```
+A command to be run. Returns the output of the command (idk if it is possible to return output)
+#### ```("players", ())```
+###### ```return(array<string>)```
+Requests list of players online, and returns an array of strings with their usernames.
+#### ```("whitelist", (<list|remove|add>, [username])```
+###### ```return(list)```
+This command whitelists a player, but it does more than just runs the command. When a Geyser member joins the server, the mod will need to cache the username and the UUID because a Geyser username won't automatically work. Only returns list when list is the argument.
+
+
+## Minecraft to CamelBot
+
+#### ```("key", (key))```
+###### ```return(bool)``` 
+On a connection, Minecraft sends predetermined a key to CamelBot. If they key is invalid or already in use, CamelBot will return false. Otherwise true.
+#### ```("chat", (chat,author))```
+When a chat message is sent, CamelBot will calculate what to do with it. The built in chat protocol is canceled.
+#### ```("stdout", (log))```
+All messages from the console will be spit out here.
+
+
+
