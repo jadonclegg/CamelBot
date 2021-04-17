@@ -25,8 +25,7 @@ This is under development
 A message to be displayed on the screen of players. 
 Does not include the author because it can be anything.
 #### ```("command", (command))```
-###### ```return(output)```
-A command to be run. Returns the output of the command (idk if it is possible to return output)
+A command to be run. To get output, scan stdout.
 #### ```("players", ())```
 ###### ```return(array<string>)```
 Requests list of players online, and returns an array of strings with their usernames.
