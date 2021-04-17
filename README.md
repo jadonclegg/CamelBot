@@ -30,9 +30,13 @@ A command to be run. Returns the output of the command (idk if it is possible to
 #### ```("players", ())```
 ###### ```return(array<string>)```
 Requests list of players online, and returns an array of strings with their usernames.
-#### ```("whitelist", (<list|remove|add>, [username])```
-###### ```return(list)```
-This command whitelists a player, but it does more than just runs the command. When a Geyser member joins the server, the mod will need to cache the username and the UUID because a Geyser username won't automatically work. Only returns list when list is the argument.
+#### ```("whitelist-add", (username)```
+This command whitelists a player, but it does more than just runs the command. When a Geyser member joins the server, the mod will need to cache the username and the UUID because a Geyser username won't automatically work.
+#### ```("whitelist-remove", (username)```
+Remove username from the whitelist
+#### ```("whitelist-list",())```
+###### ```return(array<string>)```
+Returns a list of whitelisted players, listed by username
 
 
 ## Minecraft to CamelBot
